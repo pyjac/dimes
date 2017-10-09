@@ -43,5 +43,7 @@ var rawTx = txutils.functionTx(interface, 'transfer', ['0x408CdDD39c605F20c3466F
 sendRaw(rawTx);
 
 // check balance of Dimes
-var rawTx = txutils.functionTx(interface, 'balanceOf', ['0x408CdDD39c605F20c3466F6BF917C3828FE4DCF4'], txOptions);
-sendRaw(rawTx);
+//doesn't quite work yet
+
+//var rawTx = txutils.functionTx(interface, 'balanceOf', ['0x408CdDD39c605F20c3466F6BF917C3828FE4DCF4'], txOptions);
+//sendRaw(rawTx);
