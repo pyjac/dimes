@@ -33,13 +33,15 @@ function sendRaw(rawTx) {
 }
 
 // send some Dimes
+var _sendTo = '0x408CdDD39c605F20c3466F6BF917C3828FE4DCF4';
+
 var txOptions = {
      nonce: web3.toHex(web3.eth.getTransactionCount(address)),
      gasLimit: web3.toHex(800000),
      gasPrice: web3.toHex(20000000000),
      to: contractAddress
  }
-var rawTx = txutils.functionTx(interface, 'transfer', ['0x408CdDD39c605F20c3466F6BF917C3828FE4DCF4',100], txOptions);
+var rawTx = txutils.functionTx(interface, 'transfer', [ _sendTo ,100], txOptions);
 sendRaw(rawTx);
 
 // check balance of Dimes
