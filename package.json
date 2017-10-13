@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node ./bin/www"
   },
+  "engines" : { "node" : ">=8.6" },
   "dependencies": {
     "@google-cloud/firestore": "^0.8.2",
     "body-parser": "^1.18.2",
