@@ -9,11 +9,13 @@ const config = {
 firebase.initializeApp(config);
 const db = firebase.firestore();
 
-
 class DimesApp extends React.Component {
     state = {
         accounts: [],
-        pickedAccount: null
+        pickedAccount: null,
+        amount: null,
+        toAddress: null,
+        serverResult: null,
     }
 
     componentDidMount() {
@@ -21,14 +23,41 @@ class DimesApp extends React.Component {
             const accounts = [];
             // TODO: Create another collection with only addresses
             querySnapshot.forEach((doc) => {
+                let { publicAddress, balance } = doc.data();
                 accounts.push({
-                    address: doc.data().publicAddress
+                    balance: balance,
+                    address: publicAddress
                 });
             });
+
             this.setState({
                 accounts
             })
         });
+    }
+
+    handleAmountChange = (event) => {
+        this.setState({amount: event.target.value});
+    }
+    
+    handleToAddressChange = (event) => {
+        this.setState({toAddress: event.target.value});
+    }
+
+    handleSendTokenSubmit = () => {
+        event.preventDefault();
+        fetch(`/api/me/send/${this.state.toAddress}`, {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            body: JSON.stringify({
+                me: this.state.pickedAccount.address,
+                amount: this.state.amount
+            })
+        }).then(res => res.json())
+        .then(r => this.setState({serverResult: `<a href='https://rinkeby.etherscan.io/tx/${r.result}'>${r.result}</a>`}));
     }
 
     createAccount = () => {
@@ -36,11 +65,28 @@ class DimesApp extends React.Component {
         fetch('/api/create-wallet');
     }
 
+    syncAccountsBalances = () => {
+        // TODO: ERROR and Response handling
+        fetch('/api/sync-balances');
+    }
+
+
+
     pickAccount = (index) => {
         this.setState({
             pickedAccount: this.state.accounts[index]
         })
     }
+
+    requestDimes = () => {
+         // TODO: ERROR and Response handling
+         fetch(`/api/request-token/${this.pickedAccount.address}`);
+    }
+
+    getBalance = (address) => {
+        // TODO: ERROR and Response handling
+        return fetch(`/api/me/check-balance/${address}`).then((response) => response.json());
+   }
 
     render() {
         const { pickedAccount } = this.state;
@@ -53,6 +99,7 @@ class DimesApp extends React.Component {
                     </div>
                 </div>
                 <button type="button" className="btn btn-primary btn-lg mx-auto" onClick={this.createAccount}>Create Account</button>
+                <button type="button" className="btn btn-primary btn-lg mx-auto" onClick={this.syncAccountsBalances}>Sync Accounts Balances</button>
                 <p>Available accounts</p>
                 <table className="table">
                     <thead>
@@ -67,7 +114,7 @@ class DimesApp extends React.Component {
                             this.state.accounts.map((acc, index) => (
                                 <tr>
                                     <th scope="row">{ acc.address }</th>
-                                    <td>Mark</td>
+                                    <td>{ acc.balance }</td>
                                     <td>
                                         {
                                             pickedAccount && pickedAccount.address == acc.address ?
@@ -76,7 +123,6 @@ class DimesApp extends React.Component {
                                         }
                                     </td>
                                 </tr>
-
                             ))
                         }
                     </tbody>
@@ -90,19 +136,20 @@ class DimesApp extends React.Component {
                                 <input type="text" readonly className="form-control mx-sm-3" id="staticEmail2"/>
                                 <label>dimes</label>
                             </div>
-                            <button className="btn btn-primary">submit</button>
+                            <button className="btn btn-primary" onClick={this.requestDimes}>submit</button>
                         </div>
-                        <div className="form-inline">
+                        <form className="form-inline" onSubmit={this.handleSendTokenSubmit}>
                             <div className="form-group">
                                 <label for="staticEmail3">Send</label>
-                                <input type="text" readonly className="form-control mx-sm-3" id="staticEmail3"/>
+                                <input type="text" value={this.state.amount} onChange={this.handleAmountChange} className="form-control mx-sm-3" />
                                 <label>tokens to </label>
-                                <input type="text" readonly className="form-control mx-sm-3" id="staticEmail3"/>
+                                <input type="text" value={this.state.toAddress} onChange={this.handleToAddressChange} className="form-control mx-sm-3" id="staticEmail3"/>
                             </div>
                             <button className="btn btn-primary">submit</button>
-                        </div>
+                        </form>
                     </div>
                 }
+                <p dangerouslySetInnerHTML={{__html: this.state.serverResult}}></p>
             </div>
 
         )
