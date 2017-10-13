@@ -57,7 +57,13 @@ class DimesApp extends React.Component {
                 amount: this.state.amount
             })
         }).then(res => res.json())
-        .then(r => this.setState({serverResult: `<a href='https://rinkeby.etherscan.io/tx/${r.result}'>${r.result}</a>`}));
+        .then(r => {
+            if (r.error) {
+                this.setState({serverResult: r.error })
+            } else {
+                this.setState({serverResult: `<a href='https://rinkeby.etherscan.io/tx/${r.result}'>${r.result}</a>`})
+            }
+        });
     }
 
     createAccount = () => {

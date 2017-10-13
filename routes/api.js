@@ -125,11 +125,11 @@ router.post('/me/send/:address', function(req, res) {
             const rawTx = txutils.functionTx(interface, 'transfer', [ _sendTo , parseInt(amount)], txOptions);
             sendRaw(rawTx, crypt.decrypt(privateKey))
             .then(result => res.status(200).json({ result }))
-            .catch(result => res.status(500).json({ result }));
+            .catch(error => res.status(500).json({ error: error.message }));
         });
     }).catch(function(error) {
         console.log("Error getting document:", error);
-        return res.json({ result: error }); 
+        return res.json({ error: error.message }); 
     });
 });
 
