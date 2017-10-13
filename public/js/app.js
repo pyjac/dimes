@@ -16,6 +16,9 @@ class DimesApp extends React.Component {
         amount: null,
         toAddress: null,
         serverResult: null,
+        requestAddress: null,
+        requestTokenAmount: null,
+        requestEtherAmount: null
     }
 
     componentDidMount() {
@@ -42,6 +45,14 @@ class DimesApp extends React.Component {
     
     handleToAddressChange = (event) => {
         this.setState({toAddress: event.target.value});
+    }
+
+    handleRequestTokenAmountChange = (event) => {
+        this.setState({requestTokenAmount: event.target.value});
+    }
+
+    handleRequestEtherAmountChange = (event) => {
+        this.setState({requestEtherAmount: event.target.value});
     }
 
     handleSendTokenSubmit = () => {
@@ -85,8 +96,26 @@ class DimesApp extends React.Component {
     }
 
     requestDimes = () => {
+        event.preventDefault();
          // TODO: ERROR and Response handling
-         fetch(`/api/request-token/${this.pickedAccount.address}`);
+         fetch(`/api/request-token/${this.state.pickedAccount.address}`, {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            body: JSON.stringify({
+                tokenAmount: this.state.requestTokenAmount,
+                etherAmount: this.state.requestEtherAmount
+            })
+        }).then(res => res.json())
+        .then(r => {
+            if (r.error) {
+                this.setState({serverResult: r.error })
+            } else {
+                this.setState({serverResult: `<a href='https://rinkeby.etherscan.io/tx/${r.result}'>${r.result}</a>`})
+            }
+        });
     }
 
     getBalance = (address) => {
@@ -136,14 +165,16 @@ class DimesApp extends React.Component {
                 {pickedAccount &&
                     <div>
                         <p>Take action for {pickedAccount.address} </p>
-                        <div className="form-inline">
+                        <form className="form-inline" onSubmit={this.requestDimes}>
                             <div className="form-group">
                                 <label for="staticEmail2">Request</label>
-                                <input type="text" readonly className="form-control mx-sm-3" id="staticEmail2"/>
-                                <label>dimes</label>
+                                <input type="text" readonly className="form-control mx-sm-3" value={this.state.requestTokenAmount} onChange={this.handleRequestTokenAmountChange}/>
+                                <label>Dimes</label>
+                                <input type="text" readonly className="form-control mx-sm-3" value={this.state.requestEtherAmount} onChange={this.handleRequestEtherAmountChange}/>
+                                <label>Ether</label>
                             </div>
                             <button className="btn btn-primary" onClick={this.requestDimes}>submit</button>
-                        </div>
+                        </form>
                         <form className="form-inline" onSubmit={this.handleSendTokenSubmit}>
                             <div className="form-group">
                                 <label for="staticEmail3">Send</label>

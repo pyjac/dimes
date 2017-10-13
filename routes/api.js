@@ -50,6 +50,56 @@ router.get('/create-wallet', function(req, res) {
     });
 });
 
+router.post('/request-token/:address', (req, res) => {
+    const { tokenAmount, etherAmount } = req.body;
+    let address = req.params.address;
+    const docRef = firestore.accounts.where("publicAddress" , "==", process.env.FAUCET_ADDRESS);
+    
+    docRef.get().then(function(querySnapshot) {
+        if (querySnapshot.size != 1) {
+            console.log("No such document!");
+            return res.json(404)
+        } 
+        let { privateKey } = querySnapshot.docs[0].data();
+        web3.eth.getTransactionCount(process.env.FAUCET_ADDRESS).then(non => {
+            const txOptions = {
+                nonce: web3.utils.toHex(non),
+                gasLimit: web3.utils.toHex(800000),
+                gasPrice: web3.utils.toHex(20000000000),
+                to: process.env.CONTRACT_ADDRESS
+            }
+            const rawTx = txutils.functionTx(interface, 'transfer', [ address , parseInt(tokenAmount)], txOptions);
+            sendRaw(rawTx, crypt.decrypt(privateKey))
+            .then(result => {
+                web3.eth.getTransactionCount(process.env.FAUCET_ADDRESS).then(non => {
+                    let sender = process.env.FAUCET_ADDRESS;
+                    let amount = web3.utils.toWei(parseFloat(etherAmount), "ether");
+                    console.log(amount);
+
+                    const txOptions = {
+                        nonce: web3.utils.toHex(non + 1),
+                        gasLimit: web3.utils.toHex(121000),
+                        gasPrice: web3.utils.toHex(20000000000),
+                        to: address,
+                        from: sender,
+                        value: web3.utils.toHex(amount)
+                    }
+                    sendRaw(txOptions, crypt.decrypt(privateKey))
+                    .then(k => res.status(200).json({ result }))
+                    .catch(error => res.status(500).json({ error: error.message }));
+
+                }).catch(error => res.status(500).json({ error: error.message }));
+            })
+            .catch(error => res.status(500).json({ error: error.message }));
+        });
+
+    }).catch(function(error) {
+        console.log("Error getting document:", error);
+        return res.json({ error: error.message }); 
+    });
+});
+
+
 /* GET balance. */
 router.get('/me/check-balance/:address', (req, res) => {
     // console.log(crypt.encrypt("314adf1de179d4cb69174dce4c4682d268489c3c3bc32504a22122548262d42e"));
